@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">TicTacToe</string>
+    <string name="Draw">Draw</string>
+    <string name="YouWin">You Win!</string>
+    <string name="YouLose">You Lose!</string>
+    <string name="Reset">Reset</string>
+    <string name="img">img</string>
+    <string name="You">You:</string>
+    <string name="AI">AI:</string>
+    <string name="Score">Score</string>
+    <string name="choose">Choose your Side</string>
+    <string name="X">X</string>
+    <string name="O">O</string>
+    <string name="desc">image</string>
+</resources>
