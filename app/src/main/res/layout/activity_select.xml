@@ -4,11 +4,12 @@
     android:layout_width="match_parent"
     android:id="@+id/root"
     android:layout_height="match_parent"
+    android:screenOrientation="portrait"
     android:paddingBottom="@dimen/activity_vertical_margin"
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.example.igorklimov.tictactoe.Select">
+    tools:context="com.example.igorklimov.tictactoe.SelectActivity">
 
     <TextView
         android:id="@+id/choose"
@@ -28,7 +29,7 @@
         android:text="@string/X"
         android:id="@+id/x"
         android:textColor="@color/X"
-        android:textSize="70sp"
+        android:textSize="105sp"
         android:layout_alignTop="@+id/o"
         android:layout_alignStart="@+id/choose"
         android:layout_marginLeft="10dp" />
@@ -36,7 +37,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="70sp"
+        android:textSize="105sp"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:text="@string/O"
         android:textColor="@color/O"
@@ -45,5 +46,11 @@
         android:layout_alignEnd="@+id/choose"
         android:layout_marginBottom="89dp"
         android:layout_marginRight="10dp" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/image"
+        android:contentDescription="@string/desc" />
 
 </RelativeLayout>

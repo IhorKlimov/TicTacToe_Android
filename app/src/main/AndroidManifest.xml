@@ -1,14 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.igorklimov.tictactoe" >
+    package="com.example.igorklimov.tictactoe">
+
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
 
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme" >
-        <activity android:name=".MainActivity"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -16,14 +21,27 @@
                 <category android:name="android.intent.category.ALTERNATIVE" />
             </intent-filter>
         </activity>
-        <activity android:name=".Select"
+        <activity
+            android:name=".SelectActivity"
             android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.ALTERNATIVE" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".StartActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".DeviceListActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:label="Select a device to connect"
+            android:theme="@android:style/Theme.Holo.Light.Dialog" />
     </application>
 
 </manifest>

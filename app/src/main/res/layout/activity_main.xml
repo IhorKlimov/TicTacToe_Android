@@ -35,7 +35,7 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold"
                 />
 
@@ -55,7 +55,7 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold" />
 
             <View
@@ -74,7 +74,7 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold" />
         </TableRow>
 
@@ -106,7 +106,7 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold" />
 
             <View
@@ -125,7 +125,7 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold" />
 
             <View
@@ -144,7 +144,7 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold" />
         </TableRow>
 
@@ -176,7 +176,7 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold" />
 
             <View
@@ -195,7 +195,7 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold" />
 
             <View
@@ -214,12 +214,13 @@
                 android:gravity="center"
                 android:onClick="cellClick"
                 android:textAppearance="?android:attr/textAppearanceLarge"
-                android:textSize="80sp"
+                android:textSize="85sp"
                 android:textStyle="bold" />
         </TableRow>
     </TableLayout>
 
     <View
+        android:id="@+id/line"
         android:layout_width="fill_parent"
         android:layout_height="1dp"
         android:layout_above="@+id/info"
@@ -237,19 +238,17 @@
         android:padding="10dp">
 
         <TextView
+            android:id="@+id/you"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="@string/You"
-            android:id="@+id/you"
             android:layout_weight="1" />
 
         <TextView
+            android:id="@+id/opponent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="@string/AI"
-            android:id="@+id/AI"
             android:layout_weight="1" />
 
         <TextView
@@ -268,14 +267,14 @@
         android:contentDescription="@string/img" />
 
     <TextView
+        android:id="@+id/result"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceLarge"
         android:text="@string/YouWin"
-        android:id="@+id/result"
         android:textColor="#4775FF"
         android:layout_centerVertical="true"
-        android:textSize="60sp"
+        android:textSize="75sp"
         android:layout_centerHorizontal="true" />
 
     <ImageButton
@@ -284,9 +283,9 @@
         android:layout_height="50dp"
         android:text="@string/Reset"
         android:id="@+id/reset"
-        android:layout_below="@id/result"
         android:layout_alignParentRight="true"
-        android:layout_marginTop="100dp"
+        android:layout_above="@id/line"
+        android:layout_marginBottom="20dp"
         android:layout_marginRight="40dp" />
 
 

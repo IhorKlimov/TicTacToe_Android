@@ -1,16 +1,20 @@
 package com.example.igorklimov.tictactoe;
 
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.renderscript.Allocation;
 import android.renderscript.Element;
 import android.renderscript.RenderScript;
@@ -19,7 +23,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
@@ -28,18 +31,20 @@ import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import org.w3c.dom.Text;
+import com.example.igorklimov.tictactoe.res.Constants;
 
+import java.nio.ByteBuffer;
 import java.util.Random;
 
-import static com.example.igorklimov.tictactoe.MainActivity.Side.O;
-import static com.example.igorklimov.tictactoe.MainActivity.Side.X;
-
 public class MainActivity extends AppCompatActivity {
+    static BluetoothService service;
     private Side[][] field = new Side[3][3];
     private boolean[][] isTaken = new boolean[3][3];
     private final String LOG = "TTT";
-    private boolean playersTurn = true;
+    static String playersName;
+    static String opponentsName;
+    static boolean playersTurn;
+    static boolean btGame;
     private int turnCount = 0;
     private boolean done = false;
     static Side playersChar;
@@ -56,11 +61,12 @@ public class MainActivity extends AppCompatActivity {
     Paint paint;
     TableLayout grid;
     DisplayMetrics dm;
-    float screenDPIy;
+    private static float screenDPIy;
     Typeface type;
     ImageButton reset;
     TextView result;
     TextView score;
+    private RelativeLayout root;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         if (supportActionBar != null) {
             supportActionBar.hide();
         }
+        root = (RelativeLayout) findViewById(R.id.fullscreen_content);
         drawingImageView = (ImageView) findViewById(R.id.DrawingImageView);
         grid = (TableLayout) findViewById(R.id.Grid);
         result = (TextView) findViewById(R.id.result);
@@ -81,48 +88,62 @@ public class MainActivity extends AppCompatActivity {
         dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         screenDPIy = dm.ydpi;
-        paint.setStrokeWidth(screenDPIy / 20);
+        paint.setStrokeWidth(screenDPIy / 15);
         paint.setMaskFilter(new BlurMaskFilter(6, BlurMaskFilter.Blur.NORMAL));
         paint.setStrokeCap(Paint.Cap.ROUND);
         bitmap = Bitmap.createBitmap(getWindowManager()
                 .getDefaultDisplay().getWidth(), getWindowManager()
                 .getDefaultDisplay().getHeight(), Bitmap.Config.ARGB_8888);
         canvas = new Canvas(bitmap);
-        type = Typeface.createFromAsset(getAssets(), "fonts/Rosemary.ttf");
-        result.setTypeface(type);
+        type = Typeface.createFromAsset(getAssets(), "fonts/MakeOut.ttf");
+        result.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/Rosemary.ttf"));
         reset = (ImageButton) findViewById(R.id.reset);
         reset.setVisibility(View.GONE);
         result.setVisibility(View.GONE);
         reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), MainActivity.class);
-                playerFirst++;
-                startActivity(intent);
-                finish();
+                service.write("Reset".getBytes());
+                startNewGame();
             }
         });
         TextView you = (TextView) findViewById(R.id.you);
-        TextView ai = (TextView) findViewById(R.id.AI);
-         score = (TextView) findViewById(R.id.score);
-        you.append(playersChar.toString());
-        ai.append(opponentChar.toString());
+        TextView opponent = (TextView) findViewById(R.id.opponent);
+        score = (TextView) findViewById(R.id.score);
+        you.setText(playersName + ":" + playersChar.toString());
+        opponent.setText(opponentsName + ":" + opponentChar.toString());
         score.append(" " + playersScore + ":" + opponentsScore);
         if (playerFirst % 2 != 0) {
             playersTurn = false;
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    opponentsTurn();
-                }
-            }, 500);
+            if (!btGame) {
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        opponentsTurn();
+                    }
+                }, 500);
+            }
+        } else {
+            playersTurn = true;
         }
     }
 
+    private void startNewGame() {
+        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        playerFirst++;
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        service.setHandler(handler);
+        Toast.makeText(getApplicationContext(), playersTurn ? "Ты ходишь первым" : "Противник ходит первым", Toast.LENGTH_SHORT).show();
+    }
 
     public void cellClick(View view) {
-
         if (playersTurn && !done) {
             TextView cell = (TextView) findViewById(view.getId());
             String cellId = cell.getResources().getResourceEntryName(cell.getId()).replace("cell", "");
@@ -135,32 +156,35 @@ public class MainActivity extends AppCompatActivity {
                 cell.setTypeface(type);
                 field[row][col] = playersChar;
                 isTaken[row][col] = true;
-                Log.i(LOG, "Row: " + row + " Col: " + col);
+                service.write((row + " " + col).getBytes());
                 playersTurn = false;
                 turnCount++;
                 checkVictory();
                 if (turnCount != 9 && !done) {
-                    Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            opponentsTurn();
-                        }
-                    }, 500);
+                    if (!btGame) {
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                opponentsTurn();
+                            }
+                        }, 500);
+                    }
                 }
             }
         }
     }
-
 
     private void opponentsTurn() {
         AI ai = new AI();
         ai.makeDecision();
         int row = ai.getRow();
         int col = ai.getCol();
+        setText(row, col);
+    }
+
+    private void setText(int row, int col) {
         String viewID = "cell" + row + "" + col;
         int id = getResources().getIdentifier(viewID, "id", getApplicationContext().getPackageName());
-        Log.i(LOG, viewID);
         TextView textView = (TextView) findViewById(id);
         isTaken[row][col] = true;
         if (!done) {
@@ -175,101 +199,85 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkVictory() {
-        if (field[0][0] != null) {
-            if (field[0][0] == field[0][1] && field[0][1] == field[0][2]) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        drawHLine(0);
-                        checkWinner(0, 0, false);
-                    }
-                }, 100);
-                return;
-            }
+        if (field[0][0] != null && field[0][0] == field[0][1] && field[0][1] == field[0][2]) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    drawHLine(0);
+                    checkWinner(0, 0, false);
+                }
+            }, 100);
+            return;
         }
-        if (field[1][0] != null) {
-            if (field[1][0] == field[1][1] && field[1][1] == field[1][2]) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        drawHLine(1);
-                        checkWinner(1, 0, false);
-                    }
-                }, 100);
-                return;
-            }
+        if (field[1][0] != null && field[1][0] == field[1][1] && field[1][1] == field[1][2]) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    drawHLine(1);
+                    checkWinner(1, 0, false);
+                }
+            }, 100);
+            return;
         }
-        if (field[2][0] != null) {
-            if (field[2][0] == field[2][1] && field[2][1] == field[2][2]) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        drawHLine(2);
-                        checkWinner(2, 0, false);
-                    }
-                }, 100);
-                return;
-            }
+        if (field[2][0] != null && field[2][0] == field[2][1] && field[2][1] == field[2][2]) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    drawHLine(2);
+                    checkWinner(2, 0, false);
+                }
+            }, 100);
+            return;
         }
-        if (field[0][0] != null) {
-            if (field[0][0] == field[1][0] && field[1][0] == field[2][0]) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        drawVLine(0);
-                        checkWinner(0, 0, false);
-                    }
-                }, 100);
-                return;
-            }
+        if (field[0][0] != null && field[0][0] == field[1][0] && field[1][0] == field[2][0]) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    drawVLine(0);
+                    checkWinner(0, 0, false);
+                }
+            }, 100);
+            return;
         }
-        if (field[0][1] != null) {
-            if (field[0][1] == field[1][1] && field[1][1] == field[2][1]) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        drawVLine(1);
-                        checkWinner(0, 1, false);
-                    }
-                }, 100);
-                return;
-            }
+        if (field[0][1] != null && field[0][1] == field[1][1] && field[1][1] == field[2][1]) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    drawVLine(1);
+                    checkWinner(0, 1, false);
+                }
+            }, 100);
+            return;
         }
-        if (field[0][2] != null) {
-            if (field[0][2] == field[1][2] && field[1][2] == field[2][2]) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        drawVLine(2);
-                        checkWinner(0, 2, false);
-                    }
-                }, 100);
-                return;
-            }
+        if (field[0][2] != null && field[0][2] == field[1][2] && field[1][2] == field[2][2]) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    drawVLine(2);
+                    checkWinner(0, 2, false);
+                }
+            }, 100);
+            return;
         }
-        if (field[0][0] != null) {
-            if (field[0][0] == field[1][1] && field[1][1] == field[2][2]) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        drawDLine(false);
-                        checkWinner(0, 0, false);
-                    }
-                }, 100);
-                return;
-            }
+        if (field[0][0] != null && field[0][0] == field[1][1] && field[1][1] == field[2][2]) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    drawDLine(false);
+                    checkWinner(0, 0, false);
+                }
+            }, 100);
+            return;
         }
-        if (field[0][2] != null) {
-            if (field[0][2] == field[1][1] && field[1][1] == field[2][0]) {
-                new Handler().postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        drawDLine(true);
-                        checkWinner(0, 2, false);
-                    }
-                }, 100);
-                return;
-            }
+        if (field[0][2] != null && field[0][2] == field[1][1] && field[1][1] == field[2][0]) {
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    drawDLine(true);
+                    checkWinner(0, 2, false);
+                }
+            }, 100);
+            return;
         }
         if (turnCount == 9 && !done) {
             new Handler().postDelayed(new Runnable() {
@@ -289,20 +297,16 @@ public class MainActivity extends AppCompatActivity {
         Log.i(LOG, "top " + top);
         Log.i(LOG, "bottom " + bottom);
         int y = 0;
-
         if (row == 0) {
             y = (int) ((((bottom - top) / 3) / 2) + (screenDPIy / 5));
-        }
-        if (row == 1) {
+        } else if (row == 1) {
             y = (bottom - top) / 2;
-        }
-        if (row == 2) {
+        } else if (row == 2) {
             int i = bottom - top;
             int t = (i / 3) * 2;
             int m = (i - t) / 2;
             y = (int) (t + m - (screenDPIy / 5));
         }
-
         drawingImageView.setImageBitmap(bitmap);
         Log.i(LOG, y + " y -------");
         canvas.drawLine(left, y, right, y, paint);
@@ -316,14 +320,11 @@ public class MainActivity extends AppCompatActivity {
         Log.i(LOG, "top " + top);
         Log.i(LOG, "bottom " + bottom);
         int x = 0;
-
         if (col == 0) {
             x = (int) ((((right - left) / 3) / 2) + (screenDPIy / 10));
-        }
-        if (col == 1) {
+        } else if (col == 1) {
             x = (int) (((right - left) / 2) + (screenDPIy / 8));
-        }
-        if (col == 2) {
+        } else if (col == 2) {
             int i = right - left;
             int l = (i / 3) * 2;
             int r = (i - l) / 2;
@@ -358,18 +359,17 @@ public class MainActivity extends AppCompatActivity {
             result.setTextColor(Color.parseColor("#3366FF"));
             result.setText(R.string.YouWin);
             playersScore++;
-            score.setText(String.format("Score %d:%d", playersScore,opponentsScore));
+            score.setText(String.format("Score %d:%d", playersScore, opponentsScore));
         } else {
             result.setTextColor(Color.parseColor("#b22222"));
             result.setText(R.string.YouLose);
             opponentsScore++;
-            score.setText(String.format("Score %d:%d", playersScore,opponentsScore));
+            score.setText(String.format("Score %d:%d", playersScore, opponentsScore));
         }
         new Task().execute();
     }
 
     private class Task extends AsyncTask<Void, Void, Void> {
-        RelativeLayout root = (RelativeLayout) findViewById(R.id.fullscreen_content);
         Bitmap src;
         Bitmap res;
 
@@ -383,24 +383,28 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(Void... params) {
-            res = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
-            RenderScript renderScript = RenderScript.create(getApplicationContext());
-            Allocation blurInput = Allocation.createFromBitmap(renderScript, src);
-            Allocation blurOutput = Allocation.createFromBitmap(renderScript, res);
-            ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(renderScript, Element.U8_4(renderScript));
-            blur.setInput(blurInput);
-            blur.setRadius(18);
-            blur.forEach(blurOutput);
-            blurOutput.copyTo(res);
-            renderScript.destroy();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                res = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
+                RenderScript renderScript = RenderScript.create(getApplicationContext());
+                Allocation blurInput = Allocation.createFromBitmap(renderScript, src);
+                Allocation blurOutput = Allocation.createFromBitmap(renderScript, res);
+                ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(renderScript, Element.U8_4(renderScript));
+                blur.setInput(blurInput);
+                blur.setRadius(18);
+                blur.forEach(blurOutput);
+                blurOutput.copyTo(res);
+                renderScript.destroy();
+            }
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
-            grid.removeAllViews();
-            grid.setBackground(new BitmapDrawable(getResources(), res));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                grid.removeAllViews();
+                grid.setBackground(new BitmapDrawable(getResources(), res));
+            }
             result.setVisibility(View.VISIBLE);
             reset.setVisibility(View.VISIBLE);
         }
@@ -633,7 +637,33 @@ public class MainActivity extends AppCompatActivity {
                 return "X";
             }
         };
+
         public abstract String getColor();
+
         public abstract String toString();
     }
+
+    Handler handler = new Handler(new Handler.Callback() {
+        @Override
+        public boolean handleMessage(Message msg) {
+            switch (msg.what) {
+                case Constants.MESSAGE_READ:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    // construct a string from the valid bytes in the buffer
+                    String readMessage = new String(readBuf, 0, msg.arg1);
+                    if (readMessage.equals("Reset")) {
+                        startNewGame();
+                    } else {
+                        int row = Integer.parseInt(readMessage.substring(0, 1));
+                        int col = Integer.parseInt(readMessage.substring(2, 3));
+                        setText(row, col);
+                        break;
+                    }
+                case Constants.MESSAGE_TOAST:
+                    Toast.makeText(getApplicationContext(), msg.getData().getString(Constants.TOAST), Toast.LENGTH_SHORT).show();
+                    break;
+            }
+            return false;
+        }
+    });
 }
