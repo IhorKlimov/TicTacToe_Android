@@ -35,6 +35,17 @@ public class DeviceListActivity extends Activity {
         setResult(Activity.RESULT_CANCELED);
         // Initialize the button to perform device discovery
         Button scanButton = (Button) findViewById(R.id.button_scan);
+        Button ensureDiscoverable = (Button) findViewById(R.id.ensure_dicoverable);
+        ensureDiscoverable.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (adapter.getScanMode() != BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
+                    Intent discoverableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
+                    discoverableIntent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
+                    startActivity(discoverableIntent);
+                }
+            }
+        });
         scanButton.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 doDiscovery();

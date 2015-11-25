@@ -1,13 +1,11 @@
 package com.example.igorklimov.tictactoe;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BlurMaskFilter;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Path;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
@@ -25,7 +23,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.RelativeLayout;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -33,7 +30,6 @@ import android.widget.Toast;
 
 import com.example.igorklimov.tictactoe.res.Constants;
 
-import java.nio.ByteBuffer;
 import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
@@ -52,6 +48,7 @@ public class MainActivity extends AppCompatActivity {
     static int playersScore = 0;
     static int opponentsScore = 0;
     static int playerFirst = 2;
+    private static float screenDPIy;
     TableRow row1;
     TableRow row2;
     TableRow row3;
@@ -61,22 +58,17 @@ public class MainActivity extends AppCompatActivity {
     Paint paint;
     TableLayout grid;
     DisplayMetrics dm;
-    private static float screenDPIy;
     Typeface type;
     ImageButton reset;
     TextView result;
     TextView score;
-    private RelativeLayout root;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_game);
         android.support.v7.app.ActionBar supportActionBar = getSupportActionBar();
-        if (supportActionBar != null) {
-            supportActionBar.hide();
-        }
-        root = (RelativeLayout) findViewById(R.id.fullscreen_content);
+        if (supportActionBar != null) supportActionBar.hide();
         drawingImageView = (ImageView) findViewById(R.id.DrawingImageView);
         grid = (TableLayout) findViewById(R.id.Grid);
         result = (TextView) findViewById(R.id.result);
@@ -103,15 +95,15 @@ public class MainActivity extends AppCompatActivity {
         reset.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                service.write("Reset".getBytes());
+                if (btGame) service.write("Reset".getBytes());
                 startNewGame();
             }
         });
         TextView you = (TextView) findViewById(R.id.you);
         TextView opponent = (TextView) findViewById(R.id.opponent);
         score = (TextView) findViewById(R.id.score);
-        you.setText(playersName + ":" + playersChar.toString());
-        opponent.setText(opponentsName + ":" + opponentChar.toString());
+        you.append(playersName + ": " + playersChar.toString());
+        opponent.append(opponentsName + ": " + opponentChar.toString());
         score.append(" " + playersScore + ":" + opponentsScore);
         if (playerFirst % 2 != 0) {
             playersTurn = false;
@@ -120,7 +112,7 @@ public class MainActivity extends AppCompatActivity {
                 handler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        opponentsTurn();
+                        AiTurn();
                     }
                 }, 500);
             }
@@ -139,8 +131,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
-        service.setHandler(handler);
-        Toast.makeText(getApplicationContext(), playersTurn ? "Ты ходишь первым" : "Противник ходит первым", Toast.LENGTH_SHORT).show();
+        if (btGame) {
+            service.setHandler(handler);
+            Toast.makeText(getApplicationContext(), playersTurn ? "Your turn" : "Opponent's turn", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void cellClick(View view) {
@@ -156,25 +150,23 @@ public class MainActivity extends AppCompatActivity {
                 cell.setTypeface(type);
                 field[row][col] = playersChar;
                 isTaken[row][col] = true;
-                service.write((row + " " + col).getBytes());
+                if (btGame) service.write((row + " " + col).getBytes());
                 playersTurn = false;
                 turnCount++;
                 checkVictory();
-                if (turnCount != 9 && !done) {
-                    if (!btGame) {
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                opponentsTurn();
-                            }
-                        }, 500);
-                    }
+                if (!btGame && turnCount != 9 && !done) {
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            AiTurn();
+                        }
+                    }, 500);
                 }
             }
         }
     }
 
-    private void opponentsTurn() {
+    private void AiTurn() {
         AI ai = new AI();
         ai.makeDecision();
         int row = ai.getRow();
@@ -317,19 +309,17 @@ public class MainActivity extends AppCompatActivity {
         int right = row1.getRight();
         int top = row1.getTop();
         int bottom = (int) (grid.getBottom() - (screenDPIy / 10));
-        Log.i(LOG, "top " + top);
-        Log.i(LOG, "bottom " + bottom);
         int x = 0;
         if (col == 0) {
-            x = (int) ((((right - left) / 3) / 2) + (screenDPIy / 10));
+            x = (int) ((dm.widthPixels / 2 - left) / 3 + screenDPIy / 15);
         } else if (col == 1) {
-            x = (int) (((right - left) / 2) + (screenDPIy / 8));
+            x = dm.widthPixels / 2;
         } else if (col == 2) {
-            int i = right - left;
+            int i = right - dm.widthPixels / 2;
             int l = (i / 3) * 2;
-            int r = (i - l) / 2;
-            x = (int) (l + r + (screenDPIy / 6));
+            x = (int) (dm.widthPixels / 2 + l + screenDPIy / 15);
         }
+        Log.i(LOG, "x " + x);
         drawingImageView.setImageBitmap(bitmap);
         canvas.drawLine(x, top, x, bottom, paint);
     }
@@ -356,7 +346,7 @@ public class MainActivity extends AppCompatActivity {
             result.setTextColor(Color.GRAY);
             result.setText(R.string.Draw);
         } else if (field[row][col] == playersChar) {
-            result.setTextColor(Color.parseColor("#3366FF"));
+            result.setTextColor(Color.parseColor("#4CAF50"));
             result.setText(R.string.YouWin);
             playersScore++;
             score.setText(String.format("Score %d:%d", playersScore, opponentsScore));
@@ -415,21 +405,10 @@ public class MainActivity extends AppCompatActivity {
         private Random random = new Random();
 
         private void makeDecision() {
-            if (isCenterEmpty()) {
-                return;
-            }
-
-            if (opponentIsCloseToWin()) {
-                return;
-            }
-
-            if (playerIsCloseToWin()) {
-                return;
-            }
-
-            if (opponentHasOneChar()) {
-                return;
-            }
+            if (isCenterEmpty()) return;
+            if (opponentIsCloseToWin()) return;
+            if (playerIsCloseToWin()) return;
+            if (opponentHasOneChar()) return;
             chooseRandom();
         }
 
@@ -443,59 +422,25 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private boolean playerIsCloseToWin() {
-            if (hasTwoCharsInLine(0, 0, 0, 1, 0, 2, playersChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(1, 0, 1, 1, 1, 2, playersChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(2, 0, 2, 1, 2, 2, playersChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 0, 1, 0, 2, 0, playersChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 1, 1, 1, 2, 1, playersChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 2, 1, 2, 2, 2, playersChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 0, 1, 1, 2, 2, playersChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 2, 1, 1, 2, 0, playersChar)) {
-                return true;
-            }
-            return false;
+            return hasTwoCharsInLine(0, 0, 0, 1, 0, 2, playersChar)
+                    || hasTwoCharsInLine(1, 0, 1, 1, 1, 2, playersChar)
+                    || hasTwoCharsInLine(2, 0, 2, 1, 2, 2, playersChar)
+                    || hasTwoCharsInLine(0, 0, 1, 0, 2, 0, playersChar)
+                    || hasTwoCharsInLine(0, 1, 1, 1, 2, 1, playersChar)
+                    || hasTwoCharsInLine(0, 2, 1, 2, 2, 2, playersChar)
+                    || hasTwoCharsInLine(0, 0, 1, 1, 2, 2, playersChar)
+                    || hasTwoCharsInLine(0, 2, 1, 1, 2, 0, playersChar);
         }
 
         private boolean opponentIsCloseToWin() {
-            if (hasTwoCharsInLine(0, 0, 0, 1, 0, 2, opponentChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(1, 0, 1, 1, 1, 2, opponentChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(2, 0, 2, 1, 2, 2, opponentChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 0, 1, 0, 2, 0, opponentChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 1, 1, 1, 2, 1, opponentChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 2, 1, 2, 2, 2, opponentChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 0, 1, 1, 2, 2, opponentChar)) {
-                return true;
-            }
-            if (hasTwoCharsInLine(0, 2, 1, 1, 2, 0, opponentChar)) {
-                return true;
-            }
-            return false;
+            return hasTwoCharsInLine(0, 0, 0, 1, 0, 2, opponentChar)
+                    || hasTwoCharsInLine(1, 0, 1, 1, 1, 2, opponentChar)
+                    || hasTwoCharsInLine(2, 0, 2, 1, 2, 2, opponentChar)
+                    || hasTwoCharsInLine(0, 0, 1, 0, 2, 0, opponentChar)
+                    || hasTwoCharsInLine(0, 1, 1, 1, 2, 1, opponentChar)
+                    || hasTwoCharsInLine(0, 2, 1, 2, 2, 2, opponentChar)
+                    || hasTwoCharsInLine(0, 0, 1, 1, 2, 2, opponentChar)
+                    || hasTwoCharsInLine(0, 2, 1, 1, 2, 0, opponentChar);
         }
 
         private boolean hasTwoCharsInLine(int r1, int c1, int r2, int c2, int r3, int c3, Side side) {
@@ -518,31 +463,14 @@ public class MainActivity extends AppCompatActivity {
         }
 
         private boolean opponentHasOneChar() {
-            if (opponentHasOneChar(0, 0, 0, 1, 0, 2)) {
-                return true;
-            }
-            if (opponentHasOneChar(1, 0, 1, 1, 1, 2)) {
-                return true;
-            }
-            if (opponentHasOneChar(2, 0, 2, 1, 2, 2)) {
-                return true;
-            }
-            if (opponentHasOneChar(0, 0, 1, 0, 2, 0)) {
-                return true;
-            }
-            if (opponentHasOneChar(0, 1, 1, 1, 2, 1)) {
-                return true;
-            }
-            if (opponentHasOneChar(0, 2, 1, 2, 2, 2)) {
-                return true;
-            }
-            if (opponentHasOneChar(0, 0, 1, 1, 2, 2)) {
-                return true;
-            }
-            if (opponentHasOneChar(0, 2, 1, 1, 2, 0)) {
-                return true;
-            }
-            return false;
+            return opponentHasOneChar(0, 0, 0, 1, 0, 2)
+                    || opponentHasOneChar(1, 0, 1, 1, 1, 2)
+                    || opponentHasOneChar(2, 0, 2, 1, 2, 2)
+                    || opponentHasOneChar(0, 0, 1, 0, 2, 0)
+                    || opponentHasOneChar(0, 1, 1, 1, 2, 1)
+                    || opponentHasOneChar(0, 2, 1, 2, 2, 2)
+                    || opponentHasOneChar(0, 0, 1, 1, 2, 2)
+                    || opponentHasOneChar(0, 2, 1, 1, 2, 0);
         }
 
         private boolean opponentHasOneChar(int r1, int c1, int r2, int c2, int r3, int c3) {
@@ -591,11 +519,6 @@ public class MainActivity extends AppCompatActivity {
         private int col;
 
         public RegionData() {
-        }
-
-        public RegionData(int row, int col) {
-            this.row = row;
-            this.col = col;
         }
 
         public int getRow() {

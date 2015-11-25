@@ -17,15 +17,16 @@
         android:layout_gravity="top|center"
         android:layout_weight="1"
         android:text="@string/TTT"
-        android:textSize="45sp" />
+        android:textSize="55sp" />
 
     <TextView
+        android:id="@+id/one_player"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:textColor="@android:color/tertiary_text_light"
         android:text="@string/oneplr"
-        android:textSize="30sp" />
+        android:textSize="36sp" />
 
     <ExpandableListView
         android:id="@+id/elvMain"

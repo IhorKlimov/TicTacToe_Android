@@ -27,6 +27,11 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
     <Button
+        android:id="@+id/ensure_dicoverable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ensure_discoverable" />
+    <Button
         android:id="@+id/button_scan"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

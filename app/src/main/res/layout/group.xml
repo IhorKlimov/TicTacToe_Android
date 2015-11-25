@@ -7,7 +7,7 @@
         android:id="@+id/textGroup"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:textSize="30sp"
+        android:textSize="36sp"
         android:gravity="center"
         android:textColor="@android:color/tertiary_text_light" />
 </LinearLayout>
