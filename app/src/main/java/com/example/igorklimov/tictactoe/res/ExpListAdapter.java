@@ -1,13 +1,15 @@
 package com.example.igorklimov.tictactoe.res;
 
 import android.content.Context;
+import android.databinding.DataBindingUtil;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.TextView;
 
 import com.example.igorklimov.tictactoe.R;
+import com.example.igorklimov.tictactoe.databinding.ChildBinding;
+import com.example.igorklimov.tictactoe.databinding.GroupBinding;
 
 import java.util.ArrayList;
 
@@ -61,27 +63,28 @@ public class ExpListAdapter extends BaseExpandableListAdapter {
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         if (convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.group, null);
+            LayoutInflater inflater = (LayoutInflater) mContext
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            GroupBinding binding = DataBindingUtil
+                    .inflate(inflater, R.layout.group, null, false);
+            convertView = binding.getRoot();
+            binding.textGroup.setText(mContext.getString(R.string.two_players));
         }
-        if (isExpanded) {
-            //Изменяем что-нибудь, если текущая Group раскрыта
-        } else {
-            //Изменяем что-нибудь, если текущая Group скрыта
-        }
-        TextView textGroup = (TextView) convertView.findViewById(R.id.textGroup);
-        textGroup.setText("Two Players");
+
         return convertView;
     }
 
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         if (convertView == null) {
-            LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            convertView = inflater.inflate(R.layout.child, null);
+            LayoutInflater inflater = (LayoutInflater) mContext
+                    .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            ChildBinding binding = DataBindingUtil
+                    .inflate(inflater, R.layout.child, null, false);
+            convertView = binding.getRoot();
+            binding.textChild.setText(mGroups.get(groupPosition).get(childPosition));
+
         }
-        TextView textChild = (TextView) convertView.findViewById(R.id.textChild);
-        textChild.setText(mGroups.get(groupPosition).get(childPosition));
         return convertView;
     }
 

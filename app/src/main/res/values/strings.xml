@@ -40,4 +40,9 @@
     <string name="insecure_connect">Connect a device - Insecure</string>
     <string name="discoverable">Make discoverable</string>
     <string name="ensure_discoverable">Ensure Discoverable</string>
+    <string name="two_players">Two Players</string>
+    <string name="your_turn">Your turn</string>
+    <string name="opponents_turn">Opponent\'s turn</string>
+    <string name="connect_with_bluetooth">Connect with Bluetooth</string>
+    <string name="connect_with_wifi">Connect with Wi-Fi</string>
 </resources>

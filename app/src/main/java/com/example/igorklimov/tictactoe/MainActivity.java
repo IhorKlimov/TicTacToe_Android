@@ -1,11 +1,11 @@
 package com.example.igorklimov.tictactoe;
 
 import android.content.Intent;
+import android.databinding.BindingAdapter;
+import android.databinding.DataBindingUtil;
 import android.graphics.Bitmap;
-import android.graphics.BlurMaskFilter;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
@@ -18,25 +18,24 @@ import android.renderscript.Element;
 import android.renderscript.RenderScript;
 import android.renderscript.ScriptIntrinsicBlur;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageButton;
-import android.widget.ImageView;
-import android.widget.TableLayout;
-import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.igorklimov.tictactoe.databinding.ActivityGameBinding;
 import com.example.igorklimov.tictactoe.res.Constants;
 
 import java.util.Random;
 
+import static android.view.View.VISIBLE;
+import static android.widget.Toast.LENGTH_SHORT;
+
 public class MainActivity extends AppCompatActivity {
+    private static final String LOG_TAG = "TTT";
     static BluetoothService service;
     private Side[][] field = new Side[3][3];
     private boolean[][] isTaken = new boolean[3][3];
-    private final String LOG = "TTT";
     static String playersName;
     static String opponentsName;
     static boolean playersTurn;
@@ -48,63 +47,26 @@ public class MainActivity extends AppCompatActivity {
     static int playersScore = 0;
     static int opponentsScore = 0;
     static int playerFirst = 2;
-    private static float screenDPIy;
-    TableRow row1;
-    TableRow row2;
-    TableRow row3;
-    ImageView drawingImageView;
-    Bitmap bitmap;
-    Canvas canvas;
-    Paint paint;
-    TableLayout grid;
-    DisplayMetrics dm;
-    Typeface type;
-    ImageButton reset;
-    TextView result;
-    TextView score;
+    private static Typeface sMakeOut;
+    private static Typeface sRosemary;
+    private ActivityGameBinding mBinding;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_game);
-        android.support.v7.app.ActionBar supportActionBar = getSupportActionBar();
-        if (supportActionBar != null) supportActionBar.hide();
-        drawingImageView = (ImageView) findViewById(R.id.DrawingImageView);
-        grid = (TableLayout) findViewById(R.id.Grid);
-        result = (TextView) findViewById(R.id.result);
-        row1 = (TableRow) findViewById(R.id.Row1);
-        row2 = (TableRow) findViewById(R.id.Row2);
-        row3 = (TableRow) findViewById(R.id.Row3);
-        paint = new Paint();
-        paint.setColor(Color.parseColor("#f75d11"));
-        dm = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(dm);
-        screenDPIy = dm.ydpi;
-        paint.setStrokeWidth(screenDPIy / 15);
-        paint.setMaskFilter(new BlurMaskFilter(6, BlurMaskFilter.Blur.NORMAL));
-        paint.setStrokeCap(Paint.Cap.ROUND);
-        bitmap = Bitmap.createBitmap(getWindowManager()
-                .getDefaultDisplay().getWidth(), getWindowManager()
-                .getDefaultDisplay().getHeight(), Bitmap.Config.ARGB_8888);
-        canvas = new Canvas(bitmap);
-        type = Typeface.createFromAsset(getAssets(), "fonts/MakeOut.ttf");
-        result.setTypeface(Typeface.createFromAsset(getAssets(), "fonts/Rosemary.ttf"));
-        reset = (ImageButton) findViewById(R.id.reset);
-        reset.setVisibility(View.GONE);
-        result.setVisibility(View.GONE);
-        reset.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (btGame) service.write("Reset".getBytes());
-                startNewGame();
-            }
-        });
-        TextView you = (TextView) findViewById(R.id.you);
-        TextView opponent = (TextView) findViewById(R.id.opponent);
-        score = (TextView) findViewById(R.id.score);
-        you.append(playersName + ": " + playersChar.toString());
-        opponent.append(opponentsName + ": " + opponentChar.toString());
-        score.append(" " + playersScore + ":" + opponentsScore);
+        mBinding = DataBindingUtil
+                .setContentView(this, R.layout.activity_game);
+
+        if (sMakeOut == null) {
+            sMakeOut = Typeface.createFromAsset(getAssets(), "fonts/MakeOut.ttf");
+            sRosemary = Typeface.createFromAsset(getAssets(), "fonts/Rosemary.ttf");
+        }
+
+        mBinding.result.setTypeface(sRosemary);
+        mBinding.you.append(playersName + ": " + playersChar.toString());
+        mBinding.opponent.append(opponentsName + ": " + opponentChar.toString());
+        mBinding.score.append(" " + playersScore + ":" + opponentsScore);
         if (playerFirst % 2 != 0) {
             playersTurn = false;
             if (!btGame) {
@@ -122,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void startNewGame() {
-        Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent intent = new Intent(this, MainActivity.class);
         playerFirst++;
         startActivity(intent);
         finish();
@@ -133,21 +95,23 @@ public class MainActivity extends AppCompatActivity {
         super.onStart();
         if (btGame) {
             service.setHandler(handler);
-            Toast.makeText(getApplicationContext(), playersTurn ? "Your turn" : "Opponent's turn", Toast.LENGTH_SHORT).show();
+            Toast.makeText(
+                    this, playersTurn ? getString(R.string.your_turn) : getString(R.string.opponents_turn), LENGTH_SHORT)
+                    .show();
         }
     }
 
     public void cellClick(View view) {
         if (playersTurn && !done) {
-            TextView cell = (TextView) findViewById(view.getId());
-            String cellId = cell.getResources().getResourceEntryName(cell.getId()).replace("cell", "");
+            TextView v = (TextView) view;
+            String cellId = view.getResources()
+                    .getResourceEntryName(view.getId()).replace("cell", "");
             int row = Integer.valueOf(cellId.substring(0, 1));
             int col = Integer.valueOf(cellId.substring(1, 2));
-            Log.i(LOG, isTaken[row][col] + "");
             if (!isTaken[row][col]) {
-                cell.setText(playersChar.toString());
-                cell.setTextColor(Color.parseColor(playersChar.getColor()));
-                cell.setTypeface(type);
+                v.setText(playersChar.toString());
+                v.setTextColor(Color.parseColor(playersChar.getColor()));
+                v.setTypeface(sMakeOut);
                 field[row][col] = playersChar;
                 isTaken[row][col] = true;
                 if (btGame) service.write((row + " " + col).getBytes());
@@ -175,14 +139,42 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void setText(int row, int col) {
-        String viewID = "cell" + row + "" + col;
-        int id = getResources().getIdentifier(viewID, "id", getApplicationContext().getPackageName());
-        TextView textView = (TextView) findViewById(id);
+        TextView view = null;
+        switch (row) {
+            case 0:
+                if (col == 0) {
+                    view = mBinding.cell00;
+                } else if (col == 1) {
+                    view = mBinding.cell01;
+                } else if (col == 2) {
+                    view = mBinding.cell02;
+                }
+                break;
+            case 1:
+                if (col == 0) {
+                    view = mBinding.cell10;
+                } else if (col == 1) {
+                    view = mBinding.cell11;
+                } else if (col == 2) {
+                    view = mBinding.cell12;
+                }
+                break;
+            case 2:
+                if (col == 0) {
+                    view = mBinding.cell20;
+                } else if (col == 1) {
+                    view = mBinding.cell21;
+                } else if (col == 2) {
+                    view = mBinding.cell22;
+                }
+                break;
+        }
+
         isTaken[row][col] = true;
         if (!done) {
-            textView.setText(opponentChar.toString());
-            textView.setTextColor(Color.parseColor(opponentChar.getColor()));
-            textView.setTypeface(type);
+            view.setText(opponentChar.toString());
+            view.setTextColor(Color.parseColor(opponentChar.getColor()));
+            view.setTypeface(sMakeOut);
             field[row][col] = opponentChar;
             playersTurn = true;
             turnCount++;
@@ -282,81 +274,88 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void drawHLine(int row) {
-        int left = row3.getLeft();
-        int right = row3.getRight();
-        int top = grid.getTop();
-        int bottom = (int) (grid.getBottom() + screenDPIy / 5);
-        Log.i(LOG, "top " + top);
-        Log.i(LOG, "bottom " + bottom);
-        int y = 0;
+        int left = mBinding.grid.getLeft();
+        int right = mBinding.grid.getRight();
+        Rect r = new Rect();
+
         if (row == 0) {
-            y = (int) ((((bottom - top) / 3) / 2) + (screenDPIy / 5));
+            mBinding.cell00.getGlobalVisibleRect(r);
         } else if (row == 1) {
-            y = (bottom - top) / 2;
+            mBinding.cell10.getGlobalVisibleRect(r);
         } else if (row == 2) {
-            int i = bottom - top;
-            int t = (i / 3) * 2;
-            int m = (i - t) / 2;
-            y = (int) (t + m - (screenDPIy / 5));
+            mBinding.cell20.getGlobalVisibleRect(r);
         }
-        drawingImageView.setImageBitmap(bitmap);
-        Log.i(LOG, y + " y -------");
-        canvas.drawLine(left, y, right, y, paint);
+        int y = ((r.bottom - r.top) / 2) + r.top;
+
+        drawLine(left, y, right, y);
     }
 
     private void drawVLine(int col) {
-        int left = row1.getLeft();
-        int right = row1.getRight();
-        int top = row1.getTop();
-        int bottom = (int) (grid.getBottom() - (screenDPIy / 10));
-        int x = 0;
+        int top = mBinding.grid.getTop();
+        int bottom = mBinding.grid.getBottom();
+        Rect r = new Rect();
+
         if (col == 0) {
-            x = (int) ((dm.widthPixels / 2 - left) / 3 + screenDPIy / 15);
+            mBinding.cell00.getGlobalVisibleRect(r);
         } else if (col == 1) {
-            x = dm.widthPixels / 2;
+            mBinding.cell01.getGlobalVisibleRect(r);
         } else if (col == 2) {
-            int i = right - dm.widthPixels / 2;
-            int l = (i / 3) * 2;
-            x = (int) (dm.widthPixels / 2 + l + screenDPIy / 15);
+            mBinding.cell02.getGlobalVisibleRect(r);
         }
-        Log.i(LOG, "x " + x);
-        drawingImageView.setImageBitmap(bitmap);
-        canvas.drawLine(x, top, x, bottom, paint);
+
+        int x = ((r.right - r.left) / 2) + r.left;
+
+        drawLine(x, top, x, bottom);
     }
 
-    private void drawDLine(boolean increasing) {
-        int left = row1.getLeft();
-        int right = row1.getRight();
+
+    private void drawLine(int startX, int startY, int endX, int endY) {
+        mBinding.lineView.setRect(new Rect(startX, startY, endX, endY));
+        mBinding.lineView.setVisibility(VISIBLE);
+        mBinding.lineView.invalidate();
+    }
+
+    private void drawDLine(boolean rising) {
+        int left = mBinding.grid.getLeft();
+        int right = mBinding.grid.getRight();
         int start;
         int finish;
-        if (increasing) {
-            start = (int) (grid.getBottom() - (screenDPIy / 5));
-            finish = (int) (row1.getTop() + (screenDPIy / 5));
+
+        if (rising) {
+            start = mBinding.grid.getBottom();
+            finish = mBinding.grid.getTop();
         } else {
-            start = (int) (row1.getTop() + (screenDPIy / 5));
-            finish = (int) (grid.getBottom() - (screenDPIy / 5));
+            start = mBinding.grid.getTop();
+            finish = mBinding.grid.getBottom();
         }
-        drawingImageView.setImageBitmap(bitmap);
-        canvas.drawLine(left, start, right, finish, paint);
+
+        drawLine(left, start, right, finish);
     }
 
     private void checkWinner(int row, int col, boolean draw) {
         done = true;
         if (draw) {
-            result.setTextColor(Color.GRAY);
-            result.setText(R.string.Draw);
+            mBinding.result.setTextColor(Color.GRAY);
+            mBinding.result.setText(R.string.Draw);
         } else if (field[row][col] == playersChar) {
-            result.setTextColor(Color.parseColor("#4CAF50"));
-            result.setText(R.string.YouWin);
+            mBinding.result.setTextColor(Color.parseColor("#4CAF50"));
+            mBinding.result.setText(R.string.YouWin);
             playersScore++;
-            score.setText(String.format("Score %d:%d", playersScore, opponentsScore));
+            mBinding.score.setText(String.format("Score %d:%d", playersScore, opponentsScore));
         } else {
-            result.setTextColor(Color.parseColor("#b22222"));
-            result.setText(R.string.YouLose);
+            mBinding.result.setTextColor(Color.parseColor("#b22222"));
+            mBinding.result.setText(R.string.YouLose);
             opponentsScore++;
-            score.setText(String.format("Score %d:%d", playersScore, opponentsScore));
+            mBinding.score.setText(String.format("Score %d:%d", playersScore, opponentsScore));
         }
-        new Task().execute();
+//        new Task().execute();
+        mBinding.result.setVisibility(VISIBLE);
+        mBinding.reset.setVisibility(VISIBLE);
+    }
+
+    public void resetGame(View view) {
+        if (btGame) service.write("Reset".getBytes());
+        startNewGame();
     }
 
     private class Task extends AsyncTask<Void, Void, Void> {
@@ -366,9 +365,9 @@ public class MainActivity extends AppCompatActivity {
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            grid.setDrawingCacheEnabled(true);
-            grid.buildDrawingCache();
-            src = grid.getDrawingCache();
+            mBinding.grid.setDrawingCacheEnabled(true);
+            mBinding.grid.buildDrawingCache();
+            src = mBinding.grid.getDrawingCache();
         }
 
         @Override
@@ -392,11 +391,11 @@ public class MainActivity extends AppCompatActivity {
         protected void onPostExecute(Void aVoid) {
             super.onPostExecute(aVoid);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                grid.removeAllViews();
-                grid.setBackground(new BitmapDrawable(getResources(), res));
+                mBinding.grid.removeAllViews();
+                mBinding.grid.setBackground(new BitmapDrawable(getResources(), res));
             }
-            result.setVisibility(View.VISIBLE);
-            reset.setVisibility(View.VISIBLE);
+            mBinding.result.setVisibility(VISIBLE);
+            mBinding.reset.setVisibility(VISIBLE);
         }
     }
 
@@ -580,10 +579,12 @@ public class MainActivity extends AppCompatActivity {
                         int row = Integer.parseInt(readMessage.substring(0, 1));
                         int col = Integer.parseInt(readMessage.substring(2, 3));
                         setText(row, col);
-                        break;
                     }
+                    break;
                 case Constants.MESSAGE_TOAST:
-                    Toast.makeText(getApplicationContext(), msg.getData().getString(Constants.TOAST), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),
+                            msg.getData().getString(Constants.TOAST), LENGTH_SHORT)
+                            .show();
                     break;
             }
             return false;
