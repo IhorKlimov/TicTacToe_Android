@@ -4,7 +4,7 @@ package com.example.igorklimov.tictactoe.res;
  * Created by Igor Klimov on 10/24/2015.
  */
 
-import com.example.igorklimov.tictactoe.BluetoothService;
+import com.example.igorklimov.tictactoe.bluetooth.BluetoothService;
 
 /**
  * Defines several constants used between {@link BluetoothService} and the UI.

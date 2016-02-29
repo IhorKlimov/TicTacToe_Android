@@ -1,4 +1,4 @@
-package com.example.igorklimov.tictactoe;
+package com.example.igorklimov.tictactoe.bluetooth;
 
 import android.content.Context;
 import android.content.Intent;
@@ -6,8 +6,9 @@ import android.os.Handler;
 import android.os.Message;
 import android.widget.Toast;
 
-import com.example.igorklimov.tictactoe.BluetoothService;
+import com.example.igorklimov.tictactoe.Game;
 import com.example.igorklimov.tictactoe.MainActivity;
+import com.example.igorklimov.tictactoe.R;
 import com.example.igorklimov.tictactoe.res.Constants;
 
 /**
@@ -33,7 +34,8 @@ public class MyHandler extends Handler {
                     case BluetoothService.STATE_CONNECTED:
                         break;
                     case BluetoothService.STATE_CONNECTING:
-                        Toast.makeText(context, "Establishing connection", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(context,context.getString(R.string.establish_connection),
+                                Toast.LENGTH_SHORT).show();
                         break;
                     case BluetoothService.STATE_LISTEN:
                     case BluetoothService.STATE_NONE:
@@ -50,11 +52,11 @@ public class MyHandler extends Handler {
                 String readMessage = new String(readBuf, 0, msg.arg1);
                 if (readMessage.contains("You")) {
                     if (readMessage.substring(4, readMessage.length()).equals("O")) {
-                        MainActivity.playersChar = MainActivity.Side.O;
-                        MainActivity.opponentChar = MainActivity.Side.X;
+                        MainActivity.playersChar = Game.O;
+                        MainActivity.opponentChar = Game.X;
                     } else {
-                        MainActivity.playersChar = MainActivity.Side.X;
-                        MainActivity.opponentChar = MainActivity.Side.O;
+                        MainActivity.playersChar = Game.X;
+                        MainActivity.opponentChar = Game.O;
                     }
                     MainActivity.playerFirst = 1;
                     runGame();
@@ -64,7 +66,8 @@ public class MyHandler extends Handler {
                 break;
             case Constants.MESSAGE_DEVICE_NAME:
                 String mConnectedDeviceName = msg.getData().getString(Constants.DEVICE_NAME);
-                Toast.makeText(context, "Connected to " + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+                String m = context.getString(R.string.title_connected_to, mConnectedDeviceName);
+                Toast.makeText(context, m, Toast.LENGTH_SHORT).show();
                 break;
             case Constants.MESSAGE_TOAST:
                 Toast.makeText(context, msg.getData().getString(Constants.TOAST), Toast.LENGTH_SHORT).show();

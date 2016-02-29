@@ -1,4 +1,4 @@
-package com.example.igorklimov.tictactoe;
+package com.example.igorklimov.tictactoe.bluetooth;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -19,6 +19,7 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.example.igorklimov.tictactoe.R;
 import com.example.igorklimov.tictactoe.databinding.ActivityDeviceListBinding;
 
 import java.util.Set;

@@ -1,4 +1,4 @@
-package com.example.igorklimov.tictactoe;
+package com.example.igorklimov.tictactoe.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
 
+import com.example.igorklimov.tictactoe.Game;
+import com.example.igorklimov.tictactoe.MainActivity;
 import com.example.igorklimov.tictactoe.res.Constants;
 
 import java.io.IOException;
@@ -345,8 +347,8 @@ public class BluetoothService {
             // Start the connected thread
             connected(socket, device);
             write("You O".getBytes());
-            MainActivity.playersChar = MainActivity.Side.X;
-            MainActivity.opponentChar = MainActivity.Side.O;
+            MainActivity.playersChar = Game.X;
+            MainActivity.opponentChar = Game.O;
             Message msg = handler.obtainMessage(Constants.RUN_BT_GAME);
             handler.sendMessage(msg);
         }

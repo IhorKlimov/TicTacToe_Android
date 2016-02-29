@@ -4,6 +4,17 @@
 
     <uses-permission android:name="android.permission.BLUETOOTH" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+
+    <permission
+        android:name="com.example.igorklimov.tictactoe.permission.C2D_MESSAGE"
+        android:protectionLevel="signature" />
+
+    <uses-permission android:name="com.example.igorklimov.tictactoe.permission.C2D_MESSAGE" />
 
     <application
         android:allowBackup="true"
@@ -11,28 +22,41 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".MainActivity"
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.ALTERNATIVE" />
             </intent-filter>
         </activity>
-
         <activity android:name=".StartActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
-            android:name=".DeviceListActivity"
+            android:name=".bluetooth.DeviceListActivity"
             android:configChanges="orientation|keyboardHidden"
             android:label="Select a device to connect" />
 
+        <!-- <receiver -->
+        <!-- android:name=".wifi.GcmBroadcastReceiver" -->
+        <!-- android:permission="com.google.android.c2dm.permission.SEND"> -->
+        <!-- <intent-filter> -->
+        <!-- <action android:name="com.google.android.c2dm.intent.RECEIVE" /> -->
+        <!-- <category android:name="com.iklimov.gcmdemo" /> -->
+        <!-- </intent-filter> -->
+        <!-- </receiver> -->
+
+
+        <!-- <service android:name=".wifi.GcmIntentService" /> -->
+
+        <activity android:name=".wifi.ConnectActivity" />
+        <activity android:name=".wifi.NoInternetActivity"></activity>
     </application>
 
 </manifest>

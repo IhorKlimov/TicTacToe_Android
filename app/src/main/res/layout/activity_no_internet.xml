@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/activity_big_vertical_margin"
+        android:paddingLeft="@dimen/activity_big_horizontal_margin"
+        android:paddingRight="@dimen/activity_big_horizontal_margin"
+        android:paddingTop="@dimen/activity_big_vertical_margin"
+        tools:context=".wifi.NoInternetActivity">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:gravity="center_horizontal"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:layout_height="wrap_content"
+            android:text="@string/no_internet_message" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/activity_big_vertical_margin"
+            android:onClick="retry"
+            android:text="@string/retry" />
+
+    </LinearLayout>
+
+</layout>

@@ -39,49 +39,38 @@ public class LineView extends View {
 
     public LineView(Context context) {
         super(context);
-        mPaint= new Paint();
-        mPaint.setColor(Color.parseColor("#f75d11"));
-        mPaint.setStrokeWidth(40);
-        mPaint.setMaskFilter(new BlurMaskFilter(6, BlurMaskFilter.Blur.NORMAL));
-        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        setPaint(context);
     }
 
     public LineView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        mPaint= new Paint();
-        mPaint.setColor(Color.parseColor("#f75d11"));
-        mPaint.setStrokeWidth(40);
-        mPaint.setMaskFilter(new BlurMaskFilter(6, BlurMaskFilter.Blur.NORMAL));
-        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        setPaint(context);
     }
 
     public LineView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
-        mPaint= new Paint();
-        mPaint.setColor(Color.parseColor("#f75d11"));
-        mPaint.setStrokeWidth(40);
-        mPaint.setMaskFilter(new BlurMaskFilter(6, BlurMaskFilter.Blur.NORMAL));
-        mPaint.setStrokeCap(Paint.Cap.ROUND);
-    }
-
-    public LineView(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
-        super(context, attrs, defStyleAttr, defStyleRes);
-        mPaint= new Paint();
-        mPaint.setColor(Color.parseColor("#f75d11"));
-        mPaint.setStrokeWidth(40);
-        mPaint.setMaskFilter(new BlurMaskFilter(6, BlurMaskFilter.Blur.NORMAL));
-        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        setPaint(context);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        Log.d(LOG_TAG, "onDraw: "+ mRect.top);
-        Log.d(LOG_TAG, "onDraw: "+ mRect.left);
+        Log.d(LOG_TAG, "onDraw: " + mRect.top);
+        Log.d(LOG_TAG, "onDraw: " + mRect.left);
         canvas.drawLine(mRect.left, mRect.top, mRect.right, mRect.bottom, mPaint);
     }
 
     public void setRect(Rect rect) {
         mRect = rect;
+    }
+
+    private void setPaint(Context context) {
+        mPaint = new Paint();
+        mPaint.setColor(Color.parseColor("#f75d11"));
+        int width = (int) (context.getResources().getDisplayMetrics().density * 12);
+        mPaint.setStrokeWidth(width);
+        mPaint.setStyle(Paint.Style.STROKE);
+        mPaint.setStrokeCap(Paint.Cap.ROUND);
+        mPaint.setStrokeJoin(Paint.Join.ROUND);
     }
 }

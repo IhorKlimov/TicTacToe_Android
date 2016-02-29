@@ -7,7 +7,7 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:padding="16dp"
-        tools:context="com.example.igorklimov.tictactoe.DeviceListActivity">
+        tools:context=".bluetooth.DeviceListActivity">
 
         <TextView
             android:layout_width="match_parent"

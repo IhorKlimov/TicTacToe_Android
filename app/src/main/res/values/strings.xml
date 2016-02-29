@@ -1,48 +1,54 @@
 <resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
-    <string name="app_name">TicTacToe</string>
+    <string name="app_name" translatable="false">TicTacToe</string>
     <string name="Draw">Draw</string>
     <string name="YouWin">You Win!</string>
     <string name="YouLose">You Lose!</string>
     <string name="Reset">Reset</string>
-    <string name="img">img</string>
     <string name="You">You:</string>
     <string name="AI">AI:</string>
     <string name="Score">Score</string>
-    <string name="choose">Choose your Side</string>
-    <string name="X">X</string>
-    <string name="O">O</string>
-    <string name="desc">image</string>
-    <string name="TTT">Tic Tac Toe</string>
+    <string name="X" translatable="false">X</string>
+    <string name="O" translatable="false">O</string>
+    <string name="TTT" translatable="false">Tic Tac Toe</string>
     <string name="oneplr">One Player</string>
-    <string name="twoplrs">Two Players</string>
     <string name="PD">Paired Devices</string>
     <string name="other_devices">Other Available Devices</string>
 
     <!--  BluetoothGame -->
     <string name="send">Send</string>
-    <string name="not_connected">You are not connected to a device</string>
     <string name="bt_not_enabled_leaving">Bluetooth was not enabled.</string>
-    <string name="title_connecting">connecting...</string>
     <string name="title_connected_to">connected to <xliff:g id="device_name">%1$s</xliff:g></string>
-    <string name="title_not_connected">not connected</string>
 
     <!--  DeviceListActivity -->
     <string name="scanning">scanning for devices...</string>
     <string name="select_device">select a device to connect</string>
     <string name="none_paired">No devices have been paired</string>
     <string name="none_found">No devices found</string>
-    <string name="title_paired_devices">Paired Devices</string>
-    <string name="title_other_devices">Other Available Devices</string>
     <string name="button_scan">Scan for devices</string>
 
     <!-- Options Menu -->
-    <string name="secure_connect">Connect a device - Secure</string>
-    <string name="insecure_connect">Connect a device - Insecure</string>
-    <string name="discoverable">Make discoverable</string>
     <string name="ensure_discoverable">Ensure Discoverable</string>
     <string name="two_players">Two Players</string>
     <string name="your_turn">Your turn</string>
     <string name="opponents_turn">Opponent\'s turn</string>
     <string name="connect_with_bluetooth">Connect with Bluetooth</string>
     <string name="connect_with_wifi">Connect with Wi-Fi</string>
+    <string name="pref_user_id" translatable="false">Pref User ID</string>
+    <string name="enter_you_name">Enter your name</string>
+    <string name="connect">Connect</string>
+    <string name="format_invite_to_play">%s invites you to play</string>
+    <string name="new_user">new user %s</string>
+    <string name="start_game">Start Game</string>
+
+    <string name="pref_user_name" translatable="false">Pref user name</string>
+    <string name="online_players">Online Players</string>
+    <string name="accept">Accept</string>
+    <string name="deny">Deny</string>
+    <string name="format_send_invitation_to_play">Invite %s to play</string>
+    <string name="cancel">Cancel</string>
+    <string name="no_internet_message">Check you internet connection and try again</string>
+    <string name="retry">Retry</string>
+    <string name="opponent_offline">%s is offline</string>
+    <string name="establish_connection">Establishing connection</string>
+    <string name="bt_not_available">Bluetooth is not available</string>
 </resources>

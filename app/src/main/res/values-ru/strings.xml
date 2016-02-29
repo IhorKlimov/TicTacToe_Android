@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="http://schemas.android.com/tools">
+    <string name="AI">ИИ:</string>
+    <string name="You">Ты</string>
+    <string name="YouLose">Ты Проиграл!</string>
+    <string name="YouWin">Ты Выиграл!</string>
+    <string name="accept">Принять</string>
+    <string name="bt_not_available" >Bluetooth не доступен</string>
+    <string name="bt_not_enabled_leaving">Bluetooth не был включен</string>
+    <string name="button_scan">Искать устройства</string>
+    <string name="Draw">Ничья</string>
+    <string name="PD">Сопряженными Устройства</string>
+    <string name="Reset">Переиграть</string>
+    <string name="Score">Счет</string>
+    <string name="cancel">Отмена</string>
+    <string name="connect">Подключится</string>
+    <string name="connect_with_bluetooth">Подключится с Bluetooth</string>
+    <string name="connect_with_wifi">Подключится с Wi-Fi</string>
+    <string name="deny">Отклонить</string>
+    <string name="your_turn">Твой ход</string>
+    <string name="two_players">Два Игрока</string>
+    <string name="send">Отправить</string>
+    <string name="select_device">Выбери устроиство</string>
+    <string name="title_connected_to">подключен к <xliff:g id="device_name">%1$s</xliff:g></string>
+    <string name="start_game">Начать Игру</string>
+    <string name="scanning">Ищу устроиства</string>
+    <string name="retry">Повторить</string>
+    <string name="other_devices">Другие доступные устроиства</string>
+    <string name="opponents_turn">Оппонент первый</string>
+    <string name="opponent_offline">%s вне сети</string>
+    <string name="online_players">Онлайн Игроки</string>
+    <string name="oneplr">Один Игрок</string>
+    <string name="none_paired">Нет сопряженных устроиств</string>
+    <string name="none_found">Устроиства не найдены</string>
+    <string name="no_internet_message">Преверь свое интернет подключение и повтори</string>
+    <string name="new_user">новый игрок %s</string>
+    <string name="format_send_invitation_to_play">Пригласить %s поиграть</string>
+    <string name="format_invite_to_play">%s приглашает тебя поиграть</string>
+    <string name="establish_connection">Наладить подключение</string>
+    <string name="enter_you_name">Введи свое имя</string>
+    <string name="ensure_discoverable">Убедиться видим</string>
+</resources>

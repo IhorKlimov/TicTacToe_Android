@@ -1,55 +1,71 @@
 package com.example.igorklimov.tictactoe;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
-import android.databinding.BindingAdapter;
+import android.content.IntentFilter;
 import android.databinding.DataBindingUtil;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.Typeface;
-import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.renderscript.Allocation;
-import android.renderscript.Element;
-import android.renderscript.RenderScript;
-import android.renderscript.ScriptIntrinsicBlur;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.igorklimov.tictactoe.Game.Side;
+import com.example.igorklimov.tictactoe.bluetooth.BluetoothService;
 import com.example.igorklimov.tictactoe.databinding.ActivityGameBinding;
 import com.example.igorklimov.tictactoe.res.Constants;
+import com.example.igorklimov.tictactoe.single.AI;
+import com.example.igorklimov.tictactoe.wifi.Utils;
+import com.google.android.gms.gcm.GoogleCloudMessaging;
+import com.iklimov.tictactoe.backend.game.model.Player;
 
-import java.util.Random;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static android.view.View.VISIBLE;
 import static android.widget.Toast.LENGTH_SHORT;
+import static com.example.igorklimov.tictactoe.Game.*;
 
 public class MainActivity extends AppCompatActivity {
     private static final String LOG_TAG = "TTT";
-    static BluetoothService service;
-    private Side[][] field = new Side[3][3];
+
+
+    public static BluetoothService service;
+    @Side
+    private int[][] field = new int[3][3];
     private boolean[][] isTaken = new boolean[3][3];
-    static String playersName;
-    static String opponentsName;
+    public static String playersName;
+    public static String opponentsName;
     static boolean playersTurn;
-    static boolean btGame;
+    public static boolean btGame;
     private int turnCount = 0;
     private boolean done = false;
-    static Side playersChar;
-    static Side opponentChar;
+    @Side
+    public static int playersChar;
+    @Side
+    public static int opponentChar;
     static int playersScore = 0;
     static int opponentsScore = 0;
-    static int playerFirst = 2;
+    public static int playerFirst = 2;
     private static Typeface sMakeOut;
     private static Typeface sRosemary;
     private ActivityGameBinding mBinding;
+    private AI mAi;
+    private String opponentsRegId;
+    private BroadcastReceiver mReceiver;
+    private Context mContext;
+    private boolean wifiGame;
+    private boolean isOrganizer;
+    private boolean isNewGame;
 
 
     @Override
@@ -58,32 +74,122 @@ public class MainActivity extends AppCompatActivity {
         mBinding = DataBindingUtil
                 .setContentView(this, R.layout.activity_game);
 
+        mContext = this;
+
         if (sMakeOut == null) {
             sMakeOut = Typeface.createFromAsset(getAssets(), "fonts/MakeOut.ttf");
             sRosemary = Typeface.createFromAsset(getAssets(), "fonts/Rosemary.ttf");
         }
 
-        mBinding.result.setTypeface(sRosemary);
-        mBinding.you.append(playersName + ": " + playersChar.toString());
-        mBinding.opponent.append(opponentsName + ": " + opponentChar.toString());
-        mBinding.score.append(" " + playersScore + ":" + opponentsScore);
-        if (playerFirst % 2 != 0) {
-            playersTurn = false;
-            if (!btGame) {
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            wifiGame = extras.getBoolean(Utils.IS_WIFI_GAME);
+            if (wifiGame) {
+                playersTurn = extras.getBoolean(Utils.YOU_FIRST);
+                opponentsName = extras.getString(Utils.NAME);
+                opponentsRegId = extras.getString(Utils.REG_ID);
+                playersName = getString(R.string.You);
+                isOrganizer = extras.getBoolean(Utils.IS_ORGANIZER);
+                if (extras.getString(Utils.SIDE).equals("X")) {
+                    playersChar = X;
+                    opponentChar = O;
+                } else {
+                    playersChar = O;
+                    opponentChar = X;
+                }
+
+                mReceiver = new BroadcastReceiver() {
                     @Override
-                    public void run() {
-                        AiTurn();
+                    public void onReceive(Context context, Intent intent) {
+                        Bundle extras = intent.getExtras();
+                        GoogleCloudMessaging gcm = GoogleCloudMessaging.getInstance(mContext);
+                        // The getMessageType() intent parameter must be the intent you received
+                        // in your BroadcastReceiver.
+                        String messageType = gcm.getMessageType(intent);
+
+                        if (extras != null && !extras.isEmpty()) {  // has effect of unparcelling Bundle
+                            // Since we're not using two way messaging, this is all we really to check for
+                            if (GoogleCloudMessaging.MESSAGE_TYPE_MESSAGE.equals(messageType)) {
+                                Logger.getLogger("GCM_RECEIVED").log(Level.INFO, extras.toString());
+
+                                String action = extras.getString(Utils.ACTION);
+
+                                if (action == null) {
+                                    return;
+                                }
+                                Player player = new Player();
+                                player.setName(extras.getString(Utils.NAME));
+                                player.setRegId(extras.getString(Utils.REG_ID));
+
+                                if (action.equals(Utils.TURN)) {
+                                    int row = Integer.parseInt(extras.getString(Utils.ROW));
+                                    int col = Integer.parseInt(extras.getString(Utils.COL));
+                                    setText(row, col);
+                                } else if (action.equals(Utils.START_GAME)) {
+                                    isNewGame = true;
+                                    Utils.startGame(mContext, extras);
+                                    finish();
+                                } else if (action.equals(Utils.IS_OFFLINE)) {
+                                    String message = context.getString(R.string.opponent_offline, opponentsName);
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+                                }
+                            }
+                        }
                     }
-                }, 500);
+                };
             }
-        } else {
-            playersTurn = true;
+        }
+
+
+        mBinding.result.setTypeface(sRosemary);
+        mBinding.you.append(playersName + Game.toString(playersChar));
+        mBinding.opponent.append(opponentsName  + Game.toString(opponentChar));
+        mBinding.score.append(" " + playersScore + ":" + opponentsScore);
+
+        if (!btGame && !wifiGame) {
+            mAi = new AI(isTaken, playersChar, opponentChar, field);
+            if (playerFirst % 2 != 0) {
+                playersTurn = false;
+                if (!btGame) {
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            AiTurn();
+                        }
+                    }, 500);
+                }
+            } else {
+                playersTurn = true;
+            }
         }
     }
 
-    private void startNewGame() {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (wifiGame) {
+            registerReceiver(mReceiver, new IntentFilter("com.google.android.c2dm.intent.RECEIVE"));
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (wifiGame) {
+            unregisterReceiver(mReceiver);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (wifiGame && !isNewGame) {
+            new SendOffline().execute();
+        }
+    }
+
+    private void startSingleGame() {
         Intent intent = new Intent(this, MainActivity.class);
         playerFirst++;
         startActivity(intent);
@@ -93,11 +199,13 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onStart() {
         super.onStart();
+        Toast.makeText(this, playersTurn
+                ? getString(R.string.your_turn)
+                : getString(R.string.opponents_turn), LENGTH_SHORT)
+                .show();
         if (btGame) {
             service.setHandler(handler);
-            Toast.makeText(
-                    this, playersTurn ? getString(R.string.your_turn) : getString(R.string.opponents_turn), LENGTH_SHORT)
-                    .show();
+
         }
     }
 
@@ -109,8 +217,8 @@ public class MainActivity extends AppCompatActivity {
             int row = Integer.valueOf(cellId.substring(0, 1));
             int col = Integer.valueOf(cellId.substring(1, 2));
             if (!isTaken[row][col]) {
-                v.setText(playersChar.toString());
-                v.setTextColor(Color.parseColor(playersChar.getColor()));
+                v.setText(Game.toString(playersChar));
+                v.setTextColor(Game.getColor(playersChar));
                 v.setTypeface(sMakeOut);
                 field[row][col] = playersChar;
                 isTaken[row][col] = true;
@@ -118,27 +226,29 @@ public class MainActivity extends AppCompatActivity {
                 playersTurn = false;
                 turnCount++;
                 checkVictory();
-                if (!btGame && turnCount != 9 && !done) {
+                if (!btGame && turnCount != 9 && !done && !wifiGame) {
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             AiTurn();
                         }
                     }, 500);
+                } else if (wifiGame) {
+                    new SendTurn().execute(row + "", col + "");
                 }
             }
         }
     }
 
     private void AiTurn() {
-        AI ai = new AI();
-        ai.makeDecision();
-        int row = ai.getRow();
-        int col = ai.getCol();
+        mAi.makeDecision();
+        int row = mAi.getRow();
+        int col = mAi.getCol();
         setText(row, col);
     }
 
     private void setText(int row, int col) {
+        Log.d(LOG_TAG, "setText: " + row + " " + col);
         TextView view = null;
         switch (row) {
             case 0:
@@ -172,8 +282,8 @@ public class MainActivity extends AppCompatActivity {
 
         isTaken[row][col] = true;
         if (!done) {
-            view.setText(opponentChar.toString());
-            view.setTextColor(Color.parseColor(opponentChar.getColor()));
+            view.setText(Game.toString(opponentChar));
+            view.setTextColor(Game.getColor(opponentChar));
             view.setTypeface(sMakeOut);
             field[row][col] = opponentChar;
             playersTurn = true;
@@ -183,7 +293,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkVictory() {
-        if (field[0][0] != null && field[0][0] == field[0][1] && field[0][1] == field[0][2]) {
+        if (field[0][0] == field[0][1] && field[0][1] == field[0][2] && field[0][0] != 0) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -193,7 +303,7 @@ public class MainActivity extends AppCompatActivity {
             }, 100);
             return;
         }
-        if (field[1][0] != null && field[1][0] == field[1][1] && field[1][1] == field[1][2]) {
+        if (field[1][0] == field[1][1] && field[1][1] == field[1][2] && field[1][0] != 0) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -203,7 +313,7 @@ public class MainActivity extends AppCompatActivity {
             }, 100);
             return;
         }
-        if (field[2][0] != null && field[2][0] == field[2][1] && field[2][1] == field[2][2]) {
+        if (field[2][0] == field[2][1] && field[2][1] == field[2][2] && field[2][0] != 0) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -213,7 +323,7 @@ public class MainActivity extends AppCompatActivity {
             }, 100);
             return;
         }
-        if (field[0][0] != null && field[0][0] == field[1][0] && field[1][0] == field[2][0]) {
+        if (field[0][0] == field[1][0] && field[1][0] == field[2][0] && field[0][0] != 0) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -223,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
             }, 100);
             return;
         }
-        if (field[0][1] != null && field[0][1] == field[1][1] && field[1][1] == field[2][1]) {
+        if (field[0][1] == field[1][1] && field[1][1] == field[2][1] && field[0][1] != 0) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -233,7 +343,7 @@ public class MainActivity extends AppCompatActivity {
             }, 100);
             return;
         }
-        if (field[0][2] != null && field[0][2] == field[1][2] && field[1][2] == field[2][2]) {
+        if (field[0][2] == field[1][2] && field[1][2] == field[2][2] && field[0][2] != 0) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -243,7 +353,7 @@ public class MainActivity extends AppCompatActivity {
             }, 100);
             return;
         }
-        if (field[0][0] != null && field[0][0] == field[1][1] && field[1][1] == field[2][2]) {
+        if (field[0][0] == field[1][1] && field[1][1] == field[2][2] && field[0][0] != 0) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -253,7 +363,7 @@ public class MainActivity extends AppCompatActivity {
             }, 100);
             return;
         }
-        if (field[0][2] != null && field[0][2] == field[1][1] && field[1][1] == field[2][0]) {
+        if (field[0][2] == field[1][1] && field[1][1] == field[2][0] && field[0][2] != 0) {
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -308,7 +418,6 @@ public class MainActivity extends AppCompatActivity {
         drawLine(x, top, x, bottom);
     }
 
-
     private void drawLine(int startX, int startY, int endX, int endY) {
         mBinding.lineView.setRect(new Rect(startX, startY, endX, endY));
         mBinding.lineView.setVisibility(VISIBLE);
@@ -332,6 +441,7 @@ public class MainActivity extends AppCompatActivity {
         drawLine(left, start, right, finish);
     }
 
+    @SuppressWarnings("WrongConstant")
     private void checkWinner(int row, int col, boolean draw) {
         done = true;
         if (draw) {
@@ -348,221 +458,21 @@ public class MainActivity extends AppCompatActivity {
             opponentsScore++;
             mBinding.score.setText(String.format("Score %d:%d", playersScore, opponentsScore));
         }
-//        new Task().execute();
         mBinding.result.setVisibility(VISIBLE);
-        mBinding.reset.setVisibility(VISIBLE);
-    }
-
-    public void resetGame(View view) {
-        if (btGame) service.write("Reset".getBytes());
-        startNewGame();
-    }
-
-    private class Task extends AsyncTask<Void, Void, Void> {
-        Bitmap src;
-        Bitmap res;
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            mBinding.grid.setDrawingCacheEnabled(true);
-            mBinding.grid.buildDrawingCache();
-            src = mBinding.grid.getDrawingCache();
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                res = Bitmap.createBitmap(src.getWidth(), src.getHeight(), Bitmap.Config.ARGB_8888);
-                RenderScript renderScript = RenderScript.create(getApplicationContext());
-                Allocation blurInput = Allocation.createFromBitmap(renderScript, src);
-                Allocation blurOutput = Allocation.createFromBitmap(renderScript, res);
-                ScriptIntrinsicBlur blur = ScriptIntrinsicBlur.create(renderScript, Element.U8_4(renderScript));
-                blur.setInput(blurInput);
-                blur.setRadius(18);
-                blur.forEach(blurOutput);
-                blurOutput.copyTo(res);
-                renderScript.destroy();
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                mBinding.grid.removeAllViews();
-                mBinding.grid.setBackground(new BitmapDrawable(getResources(), res));
-            }
-            mBinding.result.setVisibility(VISIBLE);
+        if (!wifiGame || isOrganizer) {
             mBinding.reset.setVisibility(VISIBLE);
         }
     }
 
-    private class AI {
-        private RegionData opponentsChoice = new RegionData();
-        private Random random = new Random();
-
-        private void makeDecision() {
-            if (isCenterEmpty()) return;
-            if (opponentIsCloseToWin()) return;
-            if (playerIsCloseToWin()) return;
-            if (opponentHasOneChar()) return;
-            chooseRandom();
+    public void resetGame(View view) {
+        if (btGame) {
+            service.write("Reset".getBytes());
+        } else if (wifiGame) {
+            mBinding.reset.setClickable(false);
+                new Utils.SendResponse(true, true).execute(Utils.sUserId, opponentsRegId);
+        } else {
+            startSingleGame();
         }
-
-        private boolean isCenterEmpty() {
-            if (!isTaken[1][1]) {
-                opponentsChoice.setRow(1);
-                opponentsChoice.setCol(1);
-                return true;
-            }
-            return false;
-        }
-
-        private boolean playerIsCloseToWin() {
-            return hasTwoCharsInLine(0, 0, 0, 1, 0, 2, playersChar)
-                    || hasTwoCharsInLine(1, 0, 1, 1, 1, 2, playersChar)
-                    || hasTwoCharsInLine(2, 0, 2, 1, 2, 2, playersChar)
-                    || hasTwoCharsInLine(0, 0, 1, 0, 2, 0, playersChar)
-                    || hasTwoCharsInLine(0, 1, 1, 1, 2, 1, playersChar)
-                    || hasTwoCharsInLine(0, 2, 1, 2, 2, 2, playersChar)
-                    || hasTwoCharsInLine(0, 0, 1, 1, 2, 2, playersChar)
-                    || hasTwoCharsInLine(0, 2, 1, 1, 2, 0, playersChar);
-        }
-
-        private boolean opponentIsCloseToWin() {
-            return hasTwoCharsInLine(0, 0, 0, 1, 0, 2, opponentChar)
-                    || hasTwoCharsInLine(1, 0, 1, 1, 1, 2, opponentChar)
-                    || hasTwoCharsInLine(2, 0, 2, 1, 2, 2, opponentChar)
-                    || hasTwoCharsInLine(0, 0, 1, 0, 2, 0, opponentChar)
-                    || hasTwoCharsInLine(0, 1, 1, 1, 2, 1, opponentChar)
-                    || hasTwoCharsInLine(0, 2, 1, 2, 2, 2, opponentChar)
-                    || hasTwoCharsInLine(0, 0, 1, 1, 2, 2, opponentChar)
-                    || hasTwoCharsInLine(0, 2, 1, 1, 2, 0, opponentChar);
-        }
-
-        private boolean hasTwoCharsInLine(int r1, int c1, int r2, int c2, int r3, int c3, Side side) {
-            if (field[r1][c1] == side && field[r2][c2] == side && !isTaken[r3][c3]) {
-                opponentsChoice.row = r3;
-                opponentsChoice.col = c3;
-                return true;
-            }
-            if (field[r1][c1] == side && field[r3][c3] == side && !isTaken[r2][c2]) {
-                opponentsChoice.row = r2;
-                opponentsChoice.col = c2;
-                return true;
-            }
-            if (field[r2][c2] == side && field[r3][c3] == side && !isTaken[r1][c1]) {
-                opponentsChoice.row = r1;
-                opponentsChoice.col = c1;
-                return true;
-            }
-            return false;
-        }
-
-        private boolean opponentHasOneChar() {
-            return opponentHasOneChar(0, 0, 0, 1, 0, 2)
-                    || opponentHasOneChar(1, 0, 1, 1, 1, 2)
-                    || opponentHasOneChar(2, 0, 2, 1, 2, 2)
-                    || opponentHasOneChar(0, 0, 1, 0, 2, 0)
-                    || opponentHasOneChar(0, 1, 1, 1, 2, 1)
-                    || opponentHasOneChar(0, 2, 1, 2, 2, 2)
-                    || opponentHasOneChar(0, 0, 1, 1, 2, 2)
-                    || opponentHasOneChar(0, 2, 1, 1, 2, 0);
-        }
-
-        private boolean opponentHasOneChar(int r1, int c1, int r2, int c2, int r3, int c3) {
-            if (field[r1][c1] == opponentChar && !isTaken[r2][c2] && !isTaken[r3][c3]) {
-                opponentsChoice.row = r3;
-                opponentsChoice.col = c3;
-                return true;
-            }
-            if (field[r2][c2] == opponentChar && !isTaken[r1][c1] && !isTaken[r3][c3]) {
-                opponentsChoice.row = r1;
-                opponentsChoice.col = c1;
-                return true;
-            }
-            if (field[r3][c3] == opponentChar && !isTaken[r1][c1] && !isTaken[r2][c2]) {
-                opponentsChoice.row = r1;
-                opponentsChoice.col = c1;
-                return true;
-            }
-            return false;
-        }
-
-        private void chooseRandom() {
-            while (true) {
-                int r = random.nextInt(3);
-                int c = random.nextInt(3);
-                if (!isTaken[r][c]) {
-                    opponentsChoice.setRow(r);
-                    opponentsChoice.setCol(c);
-                    break;
-                }
-            }
-        }
-
-        public int getRow() {
-            return opponentsChoice.getRow();
-        }
-
-        public int getCol() {
-            return opponentsChoice.getCol();
-        }
-
-    }
-
-    private static class RegionData {
-        private int row;
-        private int col;
-
-        public RegionData() {
-        }
-
-        public int getRow() {
-            return row;
-        }
-
-        public int getCol() {
-            return col;
-        }
-
-        public void setRow(int row) {
-            this.row = row;
-        }
-
-        public void setCol(int col) {
-            this.col = col;
-        }
-    }
-
-    enum Side {
-        O {
-            @Override
-            public String getColor() {
-                return "#00c5cd";
-            }
-
-            @Override
-            public String toString() {
-                return "O";
-            }
-        }, X {
-            @Override
-            public String getColor() {
-                return "#27d38b";
-            }
-
-            @Override
-            public String toString() {
-                return "X";
-            }
-        };
-
-        public abstract String getColor();
-
-        public abstract String toString();
     }
 
     Handler handler = new Handler(new Handler.Callback() {
@@ -574,7 +484,7 @@ public class MainActivity extends AppCompatActivity {
                     // construct a string from the valid bytes in the buffer
                     String readMessage = new String(readBuf, 0, msg.arg1);
                     if (readMessage.equals("Reset")) {
-                        startNewGame();
+                        startSingleGame();
                     } else {
                         int row = Integer.parseInt(readMessage.substring(0, 1));
                         int col = Integer.parseInt(readMessage.substring(2, 3));
@@ -590,4 +500,30 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     });
+
+
+    private class SendTurn extends AsyncTask<String, Void, Void> {
+        @Override
+        protected Void doInBackground(String... params) {
+            try {
+                Utils.sRegService.sendTurn(opponentsRegId, params[0], params[1]).execute();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
+    private class SendOffline extends AsyncTask<Void, Void, Void> {
+        @Override
+        protected Void doInBackground(Void... params) {
+            try {
+                Utils.sRegService.sendOffline(opponentsRegId).execute();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return null;
+        }
+    }
+
 }

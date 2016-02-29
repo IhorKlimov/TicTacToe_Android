@@ -1,12 +1,12 @@
 apply plugin: 'com.android.application'
 
-ext{
+ext {
     supportLibraryVersion = "23.2.0"
 }
 
 android {
 
-    dataBinding{
+    dataBinding {
         enabled = true
     }
 
@@ -17,7 +17,7 @@ android {
         minSdkVersion 9
         targetSdkVersion 23
         versionCode 1
-        versionName "1.0"
+        versionName "1.1-beta2"
     }
     buildTypes {
         release {
@@ -32,7 +32,12 @@ android {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
+    compile "com.android.support:support-v4:${supportLibraryVersion}"
     compile "com.android.support:appcompat-v7:${supportLibraryVersion}"
     compile "com.android.support:gridlayout-v7:${supportLibraryVersion}"
     compile "com.android.support:percent:${supportLibraryVersion}"
+    compile "com.android.support:recyclerview-v7:${supportLibraryVersion}"
+    compile project(path: ':backend', configuration: 'android-endpoints')
+    compile 'com.google.android.gms:play-services-gcm:8.3.0'
 }
+apply plugin: 'com.google.gms.google-services'
