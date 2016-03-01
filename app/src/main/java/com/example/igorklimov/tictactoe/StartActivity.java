@@ -144,7 +144,7 @@ public class StartActivity extends AppCompatActivity {
             MainActivity.playersChar = Game.O;
             MainActivity.opponentChar = Game.X;
         }
-        MainActivity.playersName = getString(R.string.You);
+        MainActivity.playersName = getString(R.string.you);
         MainActivity.opponentsName = getString(R.string.AI);
         Intent singleGame = new Intent(this, MainActivity.class);
         startActivity(singleGame);

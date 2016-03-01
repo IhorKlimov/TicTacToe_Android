@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:xliff="http://schemas.android.com/tools">
     <string name="AI">ИИ:</string>
-    <string name="You">Ты</string>
+    <string name="you">Ты</string>
     <string name="YouLose">Ты Проиграл!</string>
     <string name="YouWin">Ты Выиграл!</string>
     <string name="accept">Принять</string>

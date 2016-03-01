@@ -4,9 +4,9 @@
     <string name="YouWin">You Win!</string>
     <string name="YouLose">You Lose!</string>
     <string name="Reset">Reset</string>
-    <string name="You">You:</string>
-    <string name="AI">AI:</string>
-    <string name="Score">Score</string>
+    <string name="you">You</string>
+    <string name="AI">AI</string>
+    <string name="Score">Score </string>
     <string name="X" translatable="false">X</string>
     <string name="O" translatable="false">O</string>
     <string name="TTT" translatable="false">Tic Tac Toe</string>

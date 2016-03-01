@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 playersTurn = extras.getBoolean(Utils.YOU_FIRST);
                 opponentsName = extras.getString(Utils.NAME);
                 opponentsRegId = extras.getString(Utils.REG_ID);
-                playersName = getString(R.string.You);
+                playersName = getString(R.string.you);
                 isOrganizer = extras.getBoolean(Utils.IS_ORGANIZER);
                 if (extras.getString(Utils.SIDE).equals("X")) {
                     playersChar = X;
@@ -142,9 +142,9 @@ public class MainActivity extends AppCompatActivity {
 
 
         mBinding.result.setTypeface(sRosemary);
-        mBinding.you.append(playersName + Game.toString(playersChar));
-        mBinding.opponent.append(opponentsName  + Game.toString(opponentChar));
-        mBinding.score.append(" " + playersScore + ":" + opponentsScore);
+        mBinding.you.append(playersName + ": " + Game.toString(playersChar));
+        mBinding.opponent.append(opponentsName + ": " + Game.toString(opponentChar));
+        mBinding.score.append(playersScore + ":" + opponentsScore);
 
         if (!btGame && !wifiGame) {
             mAi = new AI(isTaken, playersChar, opponentChar, field);
@@ -469,7 +469,7 @@ public class MainActivity extends AppCompatActivity {
             service.write("Reset".getBytes());
         } else if (wifiGame) {
             mBinding.reset.setClickable(false);
-                new Utils.SendResponse(true, true).execute(Utils.sUserId, opponentsRegId);
+            new Utils.SendResponse(true, true).execute(Utils.sUserId, opponentsRegId);
         } else {
             startSingleGame();
         }

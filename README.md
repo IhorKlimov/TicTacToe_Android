@@ -1,5 +1,9 @@
-A simple Android app.
+An Android TicTacToe game. Has single mode, bluetooth multiplayer and a Wi-Fi multiplayer.
+Why playing with AI when you can play with people all over the world.
+The backend is made with Google App Engine.
 
-![tictactoe-1](https://cloud.githubusercontent.com/assets/13784275/11398307/20edfb5a-9380-11e5-91cd-80c5ae38a02f.png)
+![tictactoe-1](http://i.imgur.com/r0eHNR0.png?1)
 
-![tictactoe-2](https://cloud.githubusercontent.com/assets/13784275/11398344/4b0e9430-9380-11e5-970d-432118ea492f.png)
+![tictactoe-2](http://i.imgur.com/qctJ8D8.png?1)
+
+![tictactoe-3](http://i.imgur.com/j8lzEYb.png?1)
