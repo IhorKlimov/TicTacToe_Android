@@ -71,6 +71,5 @@ public class LineView extends View {
         mPaint.setStrokeWidth(width);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
-        mPaint.setStrokeJoin(Paint.Join.ROUND);
     }
 }

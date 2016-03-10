@@ -57,8 +57,6 @@ public class Utils {
     public static final String O = "O";
     public static final String IS_OFFLINE = "Is Offline";
 
-
-
     public static Game sRegService = null;
     public static String sUserId;
     public static String sUserName;
@@ -66,7 +64,8 @@ public class Utils {
     static {
         Game.Builder builder = new Game.Builder(
                 AndroidHttp.newCompatibleTransport(), new AndroidJsonFactory(), null)
-                .setRootUrl("https://tictactoe-1233.appspot.com/_ah/api/");
+                //        todo replace with your AppEngine url
+                .setRootUrl("https://your-app-ID.appspot.com/_ah/api/");
         // end of optional local run code
 
         sRegService = builder.build();

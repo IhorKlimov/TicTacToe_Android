@@ -28,21 +28,17 @@ public class ConnectActivity extends AppCompatActivity
     private static final String LOG_TAG = "ConnectActivity";
     private boolean mIsPlayerList;
 
-
     public static final int CONNECT = 1;
     public static final int START = 2;
-
-    private ActivityConnectBinding mBinding;
 
     private BroadcastReceiver mReceiver;
     private Context mContext;
     private FragmentManager mSupportFragmentManager;
-    private SharedPreferences preferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mBinding = DataBindingUtil
+        ActivityConnectBinding mBinding = DataBindingUtil
                 .setContentView(this, R.layout.activity_connect);
 
         mContext = this;
@@ -101,7 +97,6 @@ public class ConnectActivity extends AppCompatActivity
                 }
             }
         };
-
     }
 
     @Override
@@ -170,7 +165,6 @@ public class ConnectActivity extends AppCompatActivity
                 .show();
     }
 
-
     private class SignUp extends AsyncTask<Boolean, Void, Void> {
         @Override
         protected Void doInBackground(Boolean... params) {
@@ -189,6 +183,4 @@ public class ConnectActivity extends AppCompatActivity
             return null;
         }
     }
-
-
 }
