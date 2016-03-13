@@ -55,6 +55,7 @@ public class LineView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+//        test
         Log.d(LOG_TAG, "onDraw: " + mRect.top);
         Log.d(LOG_TAG, "onDraw: " + mRect.left);
         canvas.drawLine(mRect.left, mRect.top, mRect.right, mRect.bottom, mPaint);
